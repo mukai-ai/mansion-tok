@@ -69,7 +69,7 @@ export const sendToTikTokDraft = async (options: DraftPostOptions) => {
       'Content-Type': 'video/mp4',
       'Content-Range': `bytes 0-${fileSize - 1}/${fileSize}`
     },
-    body: videoBuffer
+    body: videoBuffer as BodyInit
   });
 
   if (!uploadRes.ok) {

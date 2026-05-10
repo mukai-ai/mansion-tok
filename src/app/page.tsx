@@ -85,7 +85,7 @@ export default function Home() {
       
       // 処理されたファイルを読み込む
       const data = await ffmpeg.readFile('output.mp4');
-      const videoBlob = new Blob([(data as Uint8Array).buffer], { type: 'video/mp4' });
+      const videoBlob = new Blob([data as any], { type: 'video/mp4' });
       const url = URL.createObjectURL(videoBlob);
       
       setVideoUrl(url);
