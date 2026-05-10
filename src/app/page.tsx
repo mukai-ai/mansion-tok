@@ -34,8 +34,8 @@ export default function Home() {
     const ffmpeg = ffmpegRef.current;
     
     // Log progress
-    ffmpeg.on('progress', ({ progress }) => {
-      console.log(`Processing: ${Math.round(progress * 100)}%`);
+    ffmpeg.on('progress', (event: { progress: number }) => {
+      console.log(`Processing: ${Math.round(event.progress * 100)}%`);
     });
 
     try {
