@@ -14,7 +14,7 @@ export default function Home() {
   const [draftStatus, setDraftStatus] = useState<'idle' | 'sending' | 'success'>('idle');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  const ffmpegRef = useRef<any>(null);
+  const ffmpegRef = useRef<FFmpeg | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -26,28 +26,31 @@ export default function Home() {
       
     // FFmpegのインスタンス作成とロード
     ffmpegRef.current = new FFmpeg();
+
+    async function loadFFmpeg() {
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+      const ffmpeg = ffmpegRef.current;
+      
+      if (!ffmpeg) return;
+
+      // Log progress
+      ffmpeg.on('progress', (event: { progress: number }) => {
+        console.log(`Processing: ${Math.round(event.progress * 100)}%`);
+      });
+
+      try {
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        });
+        setLoaded(true);
+      } catch (e) {
+        console.error('Failed to load FFmpeg:', e);
+      }
+    }
+
     loadFFmpeg();
   }, []);
-
-  const loadFFmpeg = async () => {
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-    const ffmpeg = ffmpegRef.current;
-    
-    // Log progress
-    ffmpeg.on('progress', (event: { progress: number }) => {
-      console.log(`Processing: ${Math.round(event.progress * 100)}%`);
-    });
-
-    try {
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-      });
-      setLoaded(true);
-    } catch (e) {
-      console.error('Failed to load FFmpeg:', e);
-    }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -85,6 +88,7 @@ export default function Home() {
       
       // 処理されたファイルを読み込む
       const data = await ffmpeg.readFile('output.mp4');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const videoBlob = new Blob([data as any], { type: 'video/mp4' });
       const url = URL.createObjectURL(videoBlob);
       

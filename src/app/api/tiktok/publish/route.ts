@@ -31,8 +31,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error publishing to TikTok:', error);
-    return NextResponse.json({ error: error.message || 'Failed to publish video to TikTok' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: errorMessage || 'Failed to publish video to TikTok' }, { status: 500 });
   }
 }
