@@ -5,7 +5,10 @@ import { Upload, Video, Wand2, Hash, Music, Send, Loader2, CheckCircle2, LogIn }
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
+import { useSession, signOut } from 'next-auth/react';
+
 export default function Home() {
+  const { data: session } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState<string>('【超絶景】港区タワマン最上階！');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -159,17 +162,41 @@ export default function Home() {
               MansionTok
             </h1>
           </div>
-          <div className="flex items-center gap-4 text-sm font-medium">
-            {isAuthenticated ? (
-              <span className="px-3 py-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> 連携済み
-              </span>
-            ) : (
-              <button onClick={handleLogin} className="px-4 py-1.5 bg-[#fe2c55] hover:bg-[#e0264b] rounded-full text-white transition flex items-center gap-2 shadow-lg shadow-[#fe2c55]/20">
-                <LogIn className="w-4 h-4" /> TikTok連携
-              </button>
-            )}
-            <span className="px-3 py-1 text-slate-400 hover:text-white cursor-pointer transition">設定</span>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              {isAuthenticated ? (
+                <span className="px-3 py-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-xs font-medium flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> TikTok連携済
+                </span>
+              ) : (
+                <button onClick={handleLogin} className="px-4 py-1.5 bg-[#fe2c55] hover:bg-[#e0264b] rounded-full text-xs font-bold text-white transition flex items-center gap-2">
+                  <LogIn className="w-3.5 h-3.5" /> TikTok連携
+                </button>
+              )}
+            </div>
+
+            <div className="h-6 w-px bg-slate-800"></div>
+
+            <div className="flex items-center gap-4">
+              {session?.user && (
+                <div className="flex items-center gap-3">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs font-semibold text-white leading-none">{session.user.name}</p>
+                    <p className="text-[10px] text-slate-500 mt-1">{session.user.email}</p>
+                  </div>
+                  {session.user.image && (
+                    <img src={session.user.image} alt="" className="w-8 h-8 rounded-full border border-slate-700" />
+                  )}
+                  <button 
+                    onClick={() => signOut()}
+                    className="text-xs text-slate-400 hover:text-white transition"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
