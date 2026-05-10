@@ -71,6 +71,7 @@ export default function Home() {
     
     try {
       const ffmpeg = ffmpegRef.current;
+      if (!ffmpeg) return;
       
       // ファイルをメモリに書き込む
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
