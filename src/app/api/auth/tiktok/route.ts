@@ -5,8 +5,8 @@ export const runtime = 'edge';
 export async function GET() {
   const CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
   const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/tiktok/callback`;
-  // video.publish: Direct Post用, user.info.basic: アカウント情報用
-  const SCOPES = 'video.publish,user.info.basic';
+  // 最新のScopeを指定（video.upload: 投稿用, video.list: 確認用, user.info.*: プロフィール用）
+  const SCOPES = 'video.upload,video.list,user.info.basic,user.info.profile';
   const STATE = Math.random().toString(36).substring(7); // CSRF対策
 
   if (!CLIENT_KEY || CLIENT_KEY === 'your_client_key_here') {
