@@ -6,40 +6,19 @@ export interface DraftPostOptions {
 }
 
 export const sendToTikTokDraft = async (options: DraftPostOptions) => {
-  const { accessToken, videoBuffer, title, privacyLevel = 'SELF_ONLY' } = options;
-
-  // 1. Check Creator Info
-  const creatorInfoRes = await fetch('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  if (!creatorInfoRes.ok) {
-    const err = await creatorInfoRes.text();
-    throw new Error(`Failed to query creator info: ${err}`);
-  }
+  const { accessToken, videoBuffer } = options;
 
   // File stats
   const fileSize = videoBuffer.byteLength;
 
-  // 2. Init Video Upload
-  const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
+  // 1. Init Video Upload for Inbox (video.upload scope)
+  const initRes = await fetch('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      post_info: {
-        title: title,
-        privacy_level: privacyLevel, // SELF_ONLY means Private/Draft behavior
-        disable_comment: false,
-        disable_duet: false,
-        disable_stitch: false
-      },
       source_info: {
         source: 'FILE_UPLOAD',
         video_size: fileSize,
