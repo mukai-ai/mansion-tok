@@ -81,7 +81,6 @@ export default function Home() {
     ffmpegRef.current = new FFmpeg();
 
     async function loadFFmpeg() {
-      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
       const ffmpeg = ffmpegRef.current;
       
       if (!ffmpeg) return;
@@ -92,8 +91,8 @@ export default function Home() {
 
       try {
         await ffmpeg.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          coreURL: '/ffmpeg-core.js',
+          wasmURL: '/ffmpeg-core.wasm',
         });
         setLoaded(true);
       } catch (e: any) {
