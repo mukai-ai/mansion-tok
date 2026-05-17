@@ -30,6 +30,40 @@ export default function Home() {
   const ffmpegRef = useRef<FFmpeg | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  const triggerAnalysis = async () => {
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch('/api/tiktok/videos');
+      if (!res.ok) throw new Error('Failed to fetch videos');
+      const data = await res.json();
+      
+      if (data.data && data.data.videos && data.data.videos.length > 0) {
+        const videos = data.data.videos;
+        setAnalysisSourceCount(videos.length);
+        
+        // ハッシュタグの抽出と集計
+        const hashtagMap: { [key: string]: number } = {};
+        videos.forEach((vid: { video_description?: string }) => {
+          const desc = vid.video_description || '';
+          const tags = desc.match(/#[^\s#]+/g) || [];
+          tags.forEach((tag: string) => {
+            hashtagMap[tag] = (hashtagMap[tag] || 0) + 1;
+          });
+        });
+
+        // 頻度順にソートして上位3〜5個を抽出
+        const sortedTags = Object.keys(hashtagMap).sort((a, b) => hashtagMap[b] - hashtagMap[a]);
+        if (sortedTags.length > 0) {
+          setAnalyzedHashtags(sortedTags.slice(0, 5));
+        }
+      }
+    } catch (err) {
+      console.error('Analysis error:', err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   useEffect(() => {
     // 認証状態の確認
     fetch('/api/auth/tiktok/status')
@@ -68,41 +102,8 @@ export default function Home() {
     }
 
     loadFFmpeg();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const triggerAnalysis = async () => {
-    setIsAnalyzing(true);
-    try {
-      const res = await fetch('/api/tiktok/videos');
-      if (!res.ok) throw new Error('Failed to fetch videos');
-      const data = await res.json();
-      
-      if (data.data && data.data.videos && data.data.videos.length > 0) {
-        const videos = data.data.videos;
-        setAnalysisSourceCount(videos.length);
-        
-        // ハッシュタグの抽出と集計
-        const hashtagMap: { [key: string]: number } = {};
-        videos.forEach((vid: any) => {
-          const desc = vid.video_description || '';
-          const tags = desc.match(/#[^\s#]+/g) || [];
-          tags.forEach((tag: string) => {
-            hashtagMap[tag] = (hashtagMap[tag] || 0) + 1;
-          });
-        });
-
-        // 頻度順にソートして上位3〜5個を抽出
-        const sortedTags = Object.keys(hashtagMap).sort((a, b) => hashtagMap[b] - hashtagMap[a]);
-        if (sortedTags.length > 0) {
-          setAnalyzedHashtags(sortedTags.slice(0, 5));
-        }
-      }
-    } catch (err) {
-      console.error('Analysis error:', err);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -185,7 +186,7 @@ export default function Home() {
       
       // 処理されたファイルを読み込む
       const data = await ffmpeg.readFile('output.mp4');
-      const videoBlob = new Blob([data as any], { type: 'video/mp4' });
+      const videoBlob = new Blob([data], { type: 'video/mp4' });
       const url = URL.createObjectURL(videoBlob);
       
       setVideoUrl(url);
