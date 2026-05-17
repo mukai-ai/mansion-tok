@@ -96,8 +96,9 @@ export default function Home() {
           wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
         });
         setLoaded(true);
-      } catch (e) {
+      } catch (e: any) {
         console.error('Failed to load FFmpeg:', e);
+        alert(`動画エンジンのロードに失敗しました。\n詳細: ${e?.message || e}\n再読み込みしてください。`);
       }
     }
 
