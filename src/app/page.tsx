@@ -132,10 +132,10 @@ export default function Home() {
       const ffmpeg = ffmpegRef.current;
       if (!ffmpeg) return;
       
-      // 1. 日本語フォントを動的フェッチして書き込む
-      const fontUrl = 'https://fonts.gstatic.com/s/notosansjp/v52/-cyZGRF3mB42JseTCOufv50Spw.ttf';
+      // 1. 日本語フォントをローカルからフェッチして書き込む
+      const fontUrl = '/font.otf';
       const fontData = await fetchFile(fontUrl);
-      await ffmpeg.writeFile('font.ttf', fontData);
+      await ffmpeg.writeFile('font.otf', fontData);
       
       // 2. メイン動画ファイルを書き込む
       await ffmpeg.writeFile('input.mp4', await fetchFile(file));
@@ -157,18 +157,18 @@ export default function Home() {
           `[0:v]crop=ih*(9/16):ih,scale=1080:1920[v];` +
           `[1:v]scale=320:-1[fp];` +
           `[v][fp]overlay=100:100[ov];` +
-          `[ov]drawtext=fontfile=font.ttf:text='01  ${text1}':x=120:y=650:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
-          `drawtext=fontfile=font.ttf:text='02  ${text2}':x=120:y=780:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
-          `drawtext=fontfile=font.ttf:text='03  ${text3}':x=120:y=910:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15[out]`;
+          `[ov]drawtext=fontfile=font.otf:text='01  ${text1}':x=120:y=650:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
+          `drawtext=fontfile=font.otf:text='02  ${text2}':x=120:y=780:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
+          `drawtext=fontfile=font.otf:text='03  ${text3}':x=120:y=910:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15[out]`;
         
         ffmpegArgs.push('-filter_complex', filterStr, '-map', '[out]', '-map', '0:a?');
       } else {
         // 間取り図なしの場合
         const filterStr = 
           `crop=ih*(9/16):ih,scale=1080:1920,` +
-          `drawtext=fontfile=font.ttf:text='01  ${text1}':x=120:y=650:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
-          `drawtext=fontfile=font.ttf:text='02  ${text2}':x=120:y=780:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
-          `drawtext=fontfile=font.ttf:text='03  ${text3}':x=120:y=910:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15`;
+          `drawtext=fontfile=font.otf:text='01  ${text1}':x=120:y=650:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
+          `drawtext=fontfile=font.otf:text='02  ${text2}':x=120:y=780:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15,` +
+          `drawtext=fontfile=font.otf:text='03  ${text3}':x=120:y=910:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.4:boxborderw=15`;
         
         ffmpegArgs.push('-vf', filterStr);
       }
@@ -181,8 +181,17 @@ export default function Home() {
         'output.mp4'
       );
       
+      // ログ監視を追加
+      ffmpeg.on('log', ({ message }) => {
+        console.log(message);
+      });
+
       // FFmpeg実行
-      await ffmpeg.exec(ffmpegArgs);
+      const code = await ffmpeg.exec(ffmpegArgs);
+      
+      if (code !== 0) {
+        throw new Error(`FFmpeg exited with code ${code}`);
+      }
       
       // 処理されたファイルを読み込む
       const data = await ffmpeg.readFile('output.mp4');
@@ -192,9 +201,9 @@ export default function Home() {
       setVideoUrl(url);
       setProcessedBlob(videoBlob);
       
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('動画処理中にエラーが発生しました。テロップに特殊文字等が含まれていないか確認してください。');
+      alert(`動画処理中にエラーが発生しました。\n詳細: ${err.message || err}`);
     } finally {
       setIsProcessing(false);
     }
